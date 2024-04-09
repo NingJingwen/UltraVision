@@ -1,0 +1,5 @@
+本资源由微智启软件工作室基于yolov8对计数和追踪进行了优化
+如需环境安装，安装疑难杂症，可以加技术客服远程，QQ：3447362049
+
+修改默认值：ultralytics/cfg/default.yaml
+更多官方指令文档：https://docs.ultralytics.com/modes/predict/
