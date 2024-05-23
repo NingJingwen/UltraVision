@@ -211,7 +211,6 @@ def run(
             cv2.imshow('YOLOv8 Counter wzq', frame)
         # 如果需要保存图像，则将当前帧写入输出视频文件
         if save_img:
-            print("写入")
             video_writer.write(frame)
         # 重置每个区域的计数
         for region in all_regions:  # Reinitialize count for each region
@@ -257,7 +256,7 @@ def parse_opt():
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', type=str, default='yolov8n.pt', help='initial weights path')
     parser.add_argument('--device', default='cpu', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
-    parser.add_argument('--source', default='./data/inference_test/car.mp4', type=str, help='video file path')
+    parser.add_argument('--source', default='./datasets/inference_test/car.mp4', type=str, help='video file path')
     parser.add_argument('--view-img', action='store_true', default=True, help='show results')
     parser.add_argument('--save-img', action='store_true', default=True,help='save results')
     parser.add_argument('--exist-ok', action='store_true', help='existing project/name ok, do not increment')

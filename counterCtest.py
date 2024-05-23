@@ -111,7 +111,6 @@ def run(
 
     # 提取模型中的类别名称
     names = model.model.names
-    print(f'type of names {type(names)}')
 
     # 打开视频文件并获取帧宽度、帧高度、帧率和编码格式
     videocapture = cv2.VideoCapture(source)
@@ -227,7 +226,6 @@ def run(
             if vid_frame_count == 1:
                 cv2.namedWindow('YOLOv8 Counter')
                 cv2.setMouseCallback('YOLOv8 Counter', mouse_callback)
-
             # 由于CV2对中文显示不友好，需要将 OpenCV 图像转换为 PIL 图像
             frame_pil = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
             # 在 PIL 图像上绘制文字
@@ -257,7 +255,7 @@ def run(
         # 如果按下'q'键，则退出循环
         key = cv2.waitKey(1)
         # 英文状态'q'键退出，或者右上角按关闭按钮，退出循环
-        if key == ord('q') or cv2.getWindowProperty('YOLOv8 Counter wzq', cv2.WND_PROP_VISIBLE) < 1:
+        if key == ord('q') or cv2.getWindowProperty('YOLOv8 Counter', cv2.WND_PROP_VISIBLE) < 1:
             break
         # 当按下空格键时，如果存在未连接的点，把它们连起来
         elif key == ord(' '):
@@ -295,7 +293,7 @@ def parse_opt():
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', type=str, default='yolov8n.pt', help='initial weights path')
     parser.add_argument('--device', default='cpu', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
-    parser.add_argument('--source', default='./data/inference_test/car.mp4', type=str, help='file/dir/URL/glob/screen/0(webcam)')
+    parser.add_argument('--source', default='./datasets/inference_test/car.mp4', type=str, help='file/dir/URL/glob/screen/0(webcam)')
     parser.add_argument('--view-img', action='store_true', default=True, help='show results')
     parser.add_argument('--save-img', action='store_true', default=True, help='save results')
     parser.add_argument('--exist-ok', action='store_true', help='existing project/name ok, do not increment')

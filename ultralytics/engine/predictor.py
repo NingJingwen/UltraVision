@@ -108,6 +108,7 @@ class BasePredictor:
         self.callbacks = _callbacks or callbacks.get_default_callbacks()
         self.txt_path = None
         self._lock = threading.Lock()  # for automatic thread-safe inference
+        self.im = None
         callbacks.add_integration_callbacks(self)
 
     def preprocess(self, im):
@@ -182,6 +183,7 @@ class BasePredictor:
         if self.args.save_crop:
             result.save_crop(save_dir=self.save_dir / 'crops',
                              file_name=self.data_path.stem + ('' if self.dataset.mode == 'image' else f'_{frame}'))
+        self.im=im
 
         return log_string
 

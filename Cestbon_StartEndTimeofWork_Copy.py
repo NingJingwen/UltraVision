@@ -23,6 +23,9 @@ from ultralytics import YOLO
 from ultralytics.utils.files import increment_path
 from ultralytics.utils.plotting import Annotator, colors
 from copy import deepcopy
+import time
+import json
+import pandas as pd
 
 # 用于存储跟踪历史记录
 track_history = defaultdict(list)
@@ -30,7 +33,8 @@ track_history = defaultdict(list)
 current_region = None  # 当前区域
 current_point = None  # 当前鼠标点
 # 两个区域的计数值，颜色，拖拽状态
-count=0 #sum people
+count=0 #统计检测物体
+in_out_record={'track_id':'000'}
 all_regions = []
 new_regions = [
     {
@@ -90,6 +94,9 @@ def run(
     # 初始化帧计数器为0
     vid_frame_count = 0
     global current_point  # 使用全局变量
+    Title1='in-service'
+    Title2='out-of-service'
+    global in_out_record
     # 检查视频源路径是否存在，如果不存在则抛出FileNotFoundError异常
     if not Path(source).exists():
         raise FileNotFoundError(f"Source path '{source}' does not exist.")
@@ -122,8 +129,9 @@ def run(
             cv2.circle(frame, current_point, 5, (0, 255, 0), 2)
         for i in range(1, len(new_regions[0]['polygon'])):
             cv2.line(frame, new_regions[0]['polygon'][i - 1], new_regions[0]['polygon'][i], (0, 255, 0), 2)
-        cv2.putText(frame, 'people {}'.format(count), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
+        cv2.putText(frame, Title1 if count != 0 else Title2, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
         count=0
+
 
         # Extract the results
         results = model.track(frame, persist=True, classes=classes)
@@ -138,7 +146,6 @@ def run(
             for box, track_id, cls in zip(boxes, track_ids, clss):
                 annotator.box_label(box, str(names[cls]), color=colors(cls, True))
                 bbox_center = (box[0] + box[2]) / 2, (box[1] + box[3]) / 2  # Bbox center
-
                 track = track_history[track_id]  # 跟踪线
                 track.append((float(bbox_center[0]), float(bbox_center[1])))  # 追踪物体的xy坐标
                 # 如果跟踪线长度大于30，删除第一个点
@@ -160,6 +167,10 @@ def run(
                 for region in all_regions:
                     if region['polygon'].contains(Point((bbox_center[0], bbox_center[1]))):
                         region['counts'] += 1
+                        current_time=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+                        if track_id not in in_out_record.keys():
+                            in_out_record[track_id]={'type': cls, 'start_time': current_time}
+                        in_out_record[track_id].update({'end_time': current_time})
 
         # 绘制所有区域的边界框和文本标签
         for region in all_regions:
@@ -192,26 +203,23 @@ def run(
         # 如果需要显示图像，则显示带有目标框和跟踪线的图像
         if view_img:
             if vid_frame_count == 1:
-                cv2.namedWindow('YOLOv8 Counter wzq')
-                cv2.setMouseCallback('YOLOv8 Counter wzq', mouse_callback)
-            cv2.imshow('YOLOv8 Counter wzq', frame)
+                cv2.namedWindow('YOLOv8 Counter')
+                cv2.setMouseCallback('YOLOv8 Counter', mouse_callback)
+            cv2.imshow('YOLOv8 Counter', frame)
         # 如果需要保存图像，则将当前帧写入输出视频文件
         if save_img:
-            print("写入")
             video_writer.write(frame)
         # 重置每个区域的计数
         for region in all_regions:  # Reinitialize count for each region
             region['counts'] = 0
         # 如果按下'q'键，则退出循环
         key = cv2.waitKey(1)
-
         if key == ord('q'):
             break
         # 当按下空格键时，如果存在未连接的点，把它们连起来
         elif key == ord(' '):
             # 如果坐标大于等于3个，可以把它们封装成Polygon对象
             if len(new_regions[0]['polygon']) >= 3:
-
                 new_regions[0]['polygon'] = Polygon(new_regions[0]['polygon'])
                 # 置随机颜色
                 random_color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
@@ -230,6 +238,9 @@ def run(
             new_regions[0]['polygon'] = []
             # 清空当前坐标点
             current_point = None
+
+    df = pd.DataFrame(in_out_record)
+    df.to_csv('record.csv', header=True)
 
     # 释放帧计数器、视频写入器和视频捕获器，并关闭所有OpenCV窗口
     del vid_frame_count
@@ -256,6 +267,7 @@ def parse_opt():
 
 def main(opt):
     """Main function."""
+    print(vars(opt))
     run(**vars(opt))
 
 
